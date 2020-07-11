@@ -1,17 +1,14 @@
 module Lib
-  ( someFunc,
-    Gene,
+  ( Gene,
     Individual,
     Population,
-    --    initGene,
+    initGene,
+    initIndividual,
   )
 where
 
 import System.IO.Unsafe
 import System.Random
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
 
 data Gene = Zero | One deriving (Show, Eq, Enum, Bounded)
 
@@ -35,7 +32,30 @@ data Population = Population
   }
   deriving (Show)
 
---initGene :: Gene
---initGene = do
---  gen <- newStdGen
---  fst $ randomR (Zero, One) gen
+getRandomGene :: IO Gene
+getRandomGene = do
+  getStdRandom random
+
+initGene :: StdGen -> (Gene, StdGen)
+initGene seed = do
+  random seed
+  
+initGenes :: StdGen -> [(Gene, StdGen)]
+initGenes seed = do
+  let (a, b) = initGene seed
+  (a, b) : initGenes b
+
+initIndividual :: Int -> Individual
+initIndividual gene_length = do
+  let gen = unsafePerformIO newStdGen
+      a = take gene_length (initGenes gen)
+      b = map fst a
+  Individual { rank = length $ filter (== One) b, genes = b }
+  
+fitness :: Individual -> Individual
+fitness individual = individual { rank = length $ filter (== One) (genes individual) }
+
+--mutate :: Individual -> Individual
+
+--crossover :: Individual -> Individual -> Individual
+--crossover source target = Individual { rank = 1, genes =  }
